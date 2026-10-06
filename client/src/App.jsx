@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Camera, ShieldAlert, Download } from 'lucide-react';
+import { Camera, ShieldAlert, Download, FileText } from 'lucide-react';
 import { generateLegalLetterPdf } from './utils/generatePdf';
-import ActionStepsTracker from './components/ActionStepsTracker';
+import InteractiveChecklist from './components/InteractiveChecklist';
 
 export default function App() {
   const [loading, setLoading] = useState(false);
@@ -165,11 +165,11 @@ export default function App() {
               Download Officiële Aangetekende Sommatiebrief (PDF)
             </button>
           </div>
-
-          {/* Stappen Tracker Component */}
-          <ActionStepsTracker auditData={data.audit} />
         </div>
       )}
+
+      {/* Interactieve Actieplanner & Checklist (met Scenario Kiezer) */}
+      <InteractiveChecklist auditData={data?.audit || null} />
     </div>
   );
 }
