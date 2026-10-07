@@ -84,11 +84,29 @@ export default function App() {
 
   return (
     <div style={{ maxWidth: '880px', margin: '30px auto', padding: '20px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <header style={{ marginBottom: '24px', textAlign: 'center' }}>
-        <h1 style={{ color: '#0f172a', fontSize: '26px', margin: '0 0 8px 0' }}>
-          ista & Vastgoedbeheer Dispute Shield
-        </h1>
-        <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
+      <header style={{ marginBottom: '28px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '8px' }}>
+          <img 
+            src="/icon-192.png" 
+            alt="YourMine Logo" 
+            style={{ 
+              width: '56px', 
+              height: '56px', 
+              borderRadius: '12px', 
+              boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)', 
+              objectFit: 'cover' 
+            }} 
+          />
+          <div style={{ textAlign: 'left' }}>
+            <h1 style={{ color: '#0f172a', fontSize: '24px', margin: 0, fontWeight: '800', letterSpacing: '-0.5px' }}>
+              your<span style={{ color: '#dc2626' }}>mine</span> Dispute Shield
+            </h1>
+            <span style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              ista & Hoekstra Huurrecht Defensie
+            </span>
+          </div>
+        </div>
+        <p style={{ color: '#475569', fontSize: '14px', margin: 0, maxWidth: '640px', lineHeight: 1.4 }}>
           Wettelijke verweer-engine, stappentracker, radiator K-audit en juridische verzoekschrift-generator conform Boek 7 BW.
         </p>
       </header>
