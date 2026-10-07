@@ -6,11 +6,13 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export async function analyzeInvoiceImage(imageBuffer, mimeType) {
   const base64Data = imageBuffer.toString('base64');
+  const effectiveMimeType = mimeType || 'application/pdf';
 
   const prompt = `
   Je bent een gespecialiseerde Nederlandse huurrechtjurist en forensisch accountant.
-  Analyseer deze stookkosten- of servicekostenafrekening (afkomstig van ista of vastgoedbeheerder Hoekstra).
+  Analyseer dit document (PDF of afbeelding, eventueel bestaande uit meerdere pagina's) van een stookkosten- of servicekostenafrekening, opgesteld door ista Nederland B.V. of vastgoedbeheerder Hoekstra.
 
+  Lees en verifieer ALLE pagina's, specificaties, tabellen en meetstaten van het document nauwkeurig door.
   Haal de kerngegevens op en controleer strikt op wettelijke gebreken (Boek 7 BW).
   Retourneer UITSLUITEND valide JSON in dit formaat:
   {
@@ -36,7 +38,7 @@ export async function analyzeInvoiceImage(imageBuffer, mimeType) {
       {
         role: 'user',
         parts: [
-          { inlineData: { data: base64Data, mimeType: mimeType } },
+          { inlineData: { data: base64Data, mimeType: effectiveMimeType } },
           { text: prompt }
         ]
       }
@@ -46,7 +48,11 @@ export async function analyzeInvoiceImage(imageBuffer, mimeType) {
     }
   });
 
-  return JSON.parse(response.text);
+  let raw = response.text.trim();
+  if (raw.startsWith('```')) {
+    raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+  }
+  return JSON.parse(raw);
 }
 
 // 2. Vertaalt ingesproken tekst naar een juridisch helder advocatendossier

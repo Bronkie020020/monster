@@ -14,7 +14,10 @@ const __dirname = path.dirname(__filename);
 const clientDist = path.join(__dirname, '../client/dist');
 
 const app = express();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 35 * 1024 * 1024 } // 35 MB voor grote multi-pagina PDF documenten
+});
 
 app.use(cors());
 app.use(express.json());
@@ -29,7 +32,14 @@ app.post('/api/scan', upload.single('invoice'), async (req, res) => {
       return res.status(400).json({ error: 'Geen document geüpload.' });
     }
 
-    const audit = await analyzeInvoiceImage(req.file.buffer, req.file.mimetype);
+    let mimeType = req.file.mimetype;
+    if (!mimeType || mimeType === 'application/octet-stream') {
+      if (req.file.originalname && req.file.originalname.toLowerCase().endsWith('.pdf')) {
+        mimeType = 'application/pdf';
+      }
+    }
+
+    const audit = await analyzeInvoiceImage(req.file.buffer, mimeType);
 
     // Juridische validatie conform Boek 7 BW
     const legalViolations = [];
