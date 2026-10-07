@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { analyzeInvoiceImage, formatVoiceToLawyerBrief } from './analyzer.js';
+import { analyzeInvoiceImage, analyzeInvoiceDocuments, formatVoiceToLawyerBrief } from './analyzer.js';
 
 dotenv.config();
 
@@ -16,30 +16,25 @@ const clientDist = path.join(__dirname, '../client/dist');
 const app = express();
 const upload = multer({ 
   storage: multer.memoryStorage(),
-  limits: { fileSize: 35 * 1024 * 1024 } // 35 MB voor grote multi-pagina PDF documenten
+  limits: { fileSize: 100 * 1024 * 1024, files: 25 } // 100 MB per bestand, tot 25 bestanden
 });
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 if (fs.existsSync(clientDist)) {
   app.use(express.static(clientDist));
 }
 
-app.post('/api/scan', upload.single('invoice'), async (req, res) => {
+app.post('/api/scan', upload.any(), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'Geen document geüpload.' });
+    const uploadedFiles = req.files || (req.file ? [req.file] : []);
+    if (!uploadedFiles || uploadedFiles.length === 0) {
+      return res.status(400).json({ error: 'Geen documenten geüpload.' });
     }
 
-    let mimeType = req.file.mimetype;
-    if (!mimeType || mimeType === 'application/octet-stream') {
-      if (req.file.originalname && req.file.originalname.toLowerCase().endsWith('.pdf')) {
-        mimeType = 'application/pdf';
-      }
-    }
-
-    const audit = await analyzeInvoiceImage(req.file.buffer, mimeType);
+    const audit = await analyzeInvoiceDocuments(uploadedFiles);
 
     // Juridische validatie conform Boek 7 BW
     const legalViolations = [];
@@ -57,10 +52,18 @@ app.post('/api/scan', upload.single('invoice'), async (req, res) => {
       });
     }
 
+    const filenames = uploadedFiles.map((f) => f.originalname || 'Document');
+    const totalSizeBytes = uploadedFiles.reduce((acc, f) => acc + (f.size || 0), 0);
+
     res.json({
       success: true,
       audit,
-      legalViolations
+      legalViolations,
+      filesSummary: {
+        count: uploadedFiles.length,
+        names: filenames,
+        totalSizeBytes: totalSizeBytes
+      }
     });
   } catch (error) {
     console.error('Scan error:', error);

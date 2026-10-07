@@ -4,16 +4,32 @@ dotenv.config();
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-export async function analyzeInvoiceImage(imageBuffer, mimeType) {
-  const base64Data = imageBuffer.toString('base64');
-  const effectiveMimeType = mimeType || 'application/pdf';
+// 1. Analyseert één of meerdere geüploade documenten/pagina's (PDF of afbeeldingen tot 100MB)
+export async function analyzeInvoiceDocuments(files) {
+  const fileArray = Array.isArray(files) ? files : [files];
+  const parts = fileArray.map((file) => {
+    let effectiveMime = file.mimetype;
+    if (!effectiveMime || effectiveMime === 'application/octet-stream') {
+      if (file.originalname && file.originalname.toLowerCase().endsWith('.pdf')) {
+        effectiveMime = 'application/pdf';
+      } else {
+        effectiveMime = 'image/jpeg';
+      }
+    }
+    return {
+      inlineData: {
+        data: file.buffer.toString('base64'),
+        mimeType: effectiveMime
+      }
+    };
+  });
 
   const prompt = `
   Je bent een gespecialiseerde Nederlandse huurrechtjurist en forensisch accountant.
-  Analyseer dit document (PDF of afbeelding, eventueel bestaande uit meerdere pagina's) van een stookkosten- of servicekostenafrekening, opgesteld door ista Nederland B.V. of vastgoedbeheerder Hoekstra.
+  Analyseer dit dossier bestaande uit ${fileArray.length} geüploade document(en)/pagina's van een stookkosten- of servicekostenafrekening, opgesteld door ista Nederland B.V. of vastgoedbeheerder Hoekstra.
 
-  Lees en verifieer ALLE pagina's, specificaties, tabellen en meetstaten van het document nauwkeurig door.
-  Haal de kerngegevens op en controleer strikt op wettelijke gebreken (Boek 7 BW).
+  Lees en verifieer ALLE pagina's, specificaties, tabellen, verdeelsleutels en meetstaten van alle documenten in dit dossier nauwkeurig door.
+  Combineer de gegevens uit alle pagina's en haal de kerngegevens op. Controleer strikt op wettelijke gebreken (Boek 7 BW).
   Retourneer UITSLUITEND valide JSON in dit formaat:
   {
     "verhuurderBeheerder": "naam van beheerder (bijv. Hoekstra Vastgoedbeheer)",
@@ -32,15 +48,14 @@ export async function analyzeInvoiceImage(imageBuffer, mimeType) {
   }
   `;
 
+  parts.push({ text: prompt });
+
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: [
       {
         role: 'user',
-        parts: [
-          { inlineData: { data: base64Data, mimeType: effectiveMimeType } },
-          { text: prompt }
-        ]
+        parts: parts
       }
     ],
     config: {
@@ -53,6 +68,11 @@ export async function analyzeInvoiceImage(imageBuffer, mimeType) {
     raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
   }
   return JSON.parse(raw);
+}
+
+// Backwards compatibility alias voor enkele bestanden
+export async function analyzeInvoiceImage(imageBuffer, mimeType) {
+  return analyzeInvoiceDocuments([{ buffer: imageBuffer, mimetype: mimeType, originalname: 'document.pdf' }]);
 }
 
 // 2. Vertaalt ingesproken tekst naar een juridisch helder advocatendossier
