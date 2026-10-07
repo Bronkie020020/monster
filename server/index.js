@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { analyzeInvoiceImage } from './analyzer.js';
+import { analyzeInvoiceImage, formatVoiceToLawyerBrief } from './analyzer.js';
 
 dotenv.config();
 
@@ -55,6 +55,22 @@ app.post('/api/scan', upload.single('invoice'), async (req, res) => {
   } catch (error) {
     console.error('Scan error:', error);
     res.status(500).json({ error: 'Fout bij verwerking door AI engine: ' + (error?.message || 'Onbekende fout') });
+  }
+});
+
+// Spraak naar advocaat endpoint
+app.post('/api/lawyer-brief', async (req, res) => {
+  try {
+    const { transcript, auditData, userDetails } = req.body;
+    if (!transcript) {
+      return res.status(400).json({ error: 'Geen ingesproken tekst ontvangen.' });
+    }
+
+    const lawyerBrief = await formatVoiceToLawyerBrief({ transcript, auditData, userDetails });
+    res.json({ success: true, lawyerBrief });
+  } catch (error) {
+    console.error('Lawyer brief error:', error);
+    res.status(500).json({ error: 'Fout bij genereren advocatenbriefing: ' + (error?.message || 'Onbekende fout') });
   }
 });
 

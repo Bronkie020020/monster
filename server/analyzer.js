@@ -48,3 +48,35 @@ export async function analyzeInvoiceImage(imageBuffer, mimeType) {
 
   return JSON.parse(response.text);
 }
+
+// 2. Vertaalt ingesproken tekst naar een juridisch helder advocatendossier
+export async function formatVoiceToLawyerBrief({ transcript, auditData, userDetails }) {
+  const prompt = `
+  Je bent een senior jurist die een feitennotitie en instructiebrief opstelt voor een advocaat.
+  De cliënt (huurder) heeft mondeling ingesproken wat er speelt tegen verhuurder/beheerder Hoekstra en meetbedrijf ista.
+
+  Informatie van de cliënt:
+  - Ingesproken relaas: "${transcript}"
+  - Factuurgegevens: ${JSON.stringify(auditData || {})}
+  - Cliëntgegevens: ${JSON.stringify(userDetails || {})}
+
+  Doel:
+  Maak een gestructureerde 'Instructie- en Feitennotitie ter attentie van de Advocaat'.
+  De taal moet glashelder en zakelijk zijn, direct bruikbaar voor een advocaat om een dagvaarding of verweerschrift op te baseren. 
+  Hanteer de volgende structuur in de tekst:
+  1. PARTIJEN & HOEDANIGHEID (Wie is huurder, wie is verhuurder Hoekstra, rol van ista als hulppersoon)
+  2. CHRONOLOGIE DER FEITEN (Wat is er gebeurd op basis van wat de cliënt insprak)
+  3. RECHTSGRONDEN & GEBREKEN (Toetsing aan art. 7:259 lid 4 BW inzagerecht, art. 6:52 BW opschorting, ontbreken brondocumenten en betwisting K-factoren/warmtekostenverdelers)
+  4. HUIDIGE STATUS & SPOEDEISENDHEID (Dreiging met incasso, verzuim wederpartij)
+  5. CONCRETE INSTRUCTIE AAN DE ADVOCAAT (Wat verzoekt de cliënt: nietigverklaring van de claim, afdwingen inzage, afwijzen incassokosten)
+
+  Lever de tekst direct terug in een professionele, verzorgde briefopzet.
+  `;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: [{ role: 'user', parts: [{ text: prompt }] }]
+  });
+
+  return response.text;
+}
