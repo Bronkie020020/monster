@@ -1,11 +1,27 @@
 import React, { useState } from 'react';
-import { Camera, ShieldAlert, Download, Mic, FileText, CheckSquare, FileUp, CheckCircle2, UploadCloud } from 'lucide-react';
+import { 
+  Camera, 
+  ShieldAlert, 
+  Download, 
+  Mic, 
+  FileText, 
+  CheckSquare, 
+  FileUp, 
+  CheckCircle2, 
+  ArrowRightLeft, 
+  Calculator, 
+  Scale, 
+  Gavel 
+} from 'lucide-react';
 import { generateLegalLetterPdf } from './utils/generatePdf';
+import { generateHuurcommissieDossier } from './utils/generateHuurcommissieDossier';
 import InteractiveChecklist from './components/InteractiveChecklist';
 import VoiceLawyerBrief from './components/VoiceLawyerBrief';
+import PingpongDetector from './components/PingpongDetector';
+import RadiatorAudit from './components/RadiatorAudit';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('scanner'); // 'scanner' | 'checklist' | 'voice'
+  const [activeTab, setActiveTab] = useState('scan'); // 'scan' | 'checklist' | 'pingpong' | 'radiator' | 'voice'
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -73,30 +89,30 @@ export default function App() {
           ista & Vastgoedbeheer Dispute Shield
         </h1>
         <p style={{ color: '#475569', fontSize: '14px', margin: 0 }}>
-          Wettelijke verweer-engine, stappentracker en spraakgestuurde advocatenbriefing conform Boek 7 BW.
+          Wettelijke verweer-engine, stappentracker, radiator K-audit en juridische verzoekschrift-generator conform Boek 7 BW.
         </p>
       </header>
 
-      {/* Navigatiemenu / Tabs */}
+      {/* Navigatiemenu / 5 Tabs */}
       <nav style={{ display: 'flex', gap: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <button
-          onClick={() => setActiveTab('scanner')}
+          onClick={() => setActiveTab('scan')}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            padding: '8px 16px',
+            padding: '8px 14px',
             borderRadius: '6px',
             border: 'none',
-            background: activeTab === 'scanner' ? '#0f172a' : '#f1f5f9',
-            color: activeTab === 'scanner' ? '#ffffff' : '#475569',
+            background: activeTab === 'scan' ? '#0f172a' : '#f1f5f9',
+            color: activeTab === 'scan' ? '#ffffff' : '#475569',
             fontWeight: '600',
             cursor: 'pointer',
             fontSize: '13px',
             transition: 'all 0.2s ease'
           }}
         >
-          <Camera size={16} /> 1. Factuur Scanner & Sommatie
+          <Camera size={16} /> 1. Factuur Scanner
         </button>
         <button
           onClick={() => setActiveTab('checklist')}
@@ -104,7 +120,7 @@ export default function App() {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            padding: '8px 16px',
+            padding: '8px 14px',
             borderRadius: '6px',
             border: 'none',
             background: activeTab === 'checklist' ? '#0f172a' : '#f1f5f9',
@@ -115,7 +131,45 @@ export default function App() {
             transition: 'all 0.2s ease'
           }}
         >
-          <CheckSquare size={16} /> 2. Juridische Checklist & Tips
+          <CheckSquare size={16} /> 2. Stappen Checklist
+        </button>
+        <button
+          onClick={() => setActiveTab('pingpong')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 14px',
+            borderRadius: '6px',
+            border: 'none',
+            background: activeTab === 'pingpong' ? '#0f172a' : '#f1f5f9',
+            color: activeTab === 'pingpong' ? '#ffffff' : '#475569',
+            fontWeight: '600',
+            cursor: 'pointer',
+            fontSize: '13px',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <ArrowRightLeft size={16} /> 3. Anti-Pingpong Repliek
+        </button>
+        <button
+          onClick={() => setActiveTab('radiator')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 14px',
+            borderRadius: '6px',
+            border: 'none',
+            background: activeTab === 'radiator' ? '#0f172a' : '#f1f5f9',
+            color: activeTab === 'radiator' ? '#ffffff' : '#475569',
+            fontWeight: '600',
+            cursor: 'pointer',
+            fontSize: '13px',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <Calculator size={16} /> 4. Radiator K-Audit
         </button>
         <button
           onClick={() => setActiveTab('voice')}
@@ -123,7 +177,7 @@ export default function App() {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            padding: '8px 16px',
+            padding: '8px 14px',
             borderRadius: '6px',
             border: 'none',
             background: activeTab === 'voice' ? '#0f172a' : '#f1f5f9',
@@ -134,12 +188,12 @@ export default function App() {
             transition: 'all 0.2s ease'
           }}
         >
-          <Mic size={16} /> 3. Inspreken voor Advocaat
+          <Mic size={16} /> 5. Inspreken voor Advocaat
         </button>
       </nav>
 
       {/* Tab 1: Scanner */}
-      {activeTab === 'scanner' && (
+      {activeTab === 'scan' && (
         <div>
           <div 
             onDragOver={handleDragOver}
@@ -176,7 +230,7 @@ export default function App() {
                 Upload PDF-jaarafrekening of maak een foto
               </span>
               <span style={{ fontSize: '13px', color: '#475569', marginTop: '6px' }}>
-                Sleep je bestand hierheen of klik om te bladeren
+                Sleep je PDF-bestand hierheen (alle pagina's ondersteund) of klik om te bladeren
               </span>
 
               {/* Ondersteunde formaten & badges */}
@@ -250,7 +304,7 @@ export default function App() {
                 </div>
 
                 <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '14px', marginBottom: '18px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#334155' }}>Uw gegevens voor op het bezwaar:</span>
+                  <span style={{ fontSize: '13px', fontWeight: '600', color: '#334155' }}>Uw gegevens voor op het bezwaar en de verzoekschriften:</span>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '8px' }}>
                     <input 
                       type="text" 
@@ -283,40 +337,76 @@ export default function App() {
                   </div>
                 </div>
 
-                <button 
-                  onClick={() => generateLegalLetterPdf(data.audit, userDetails)}
-                  style={{
-                    width: '100%',
-                    background: '#0f172a',
-                    color: '#ffffff',
-                    padding: '13px',
-                    borderRadius: '6px',
-                    border: 'none',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    fontSize: '14px',
-                    transition: 'background 0.2s ease'
-                  }}
-                >
-                  <Download size={18} />
-                  Download Aangetekende Sommatiebrief Hoekstra (PDF)
-                </button>
+                {/* PDF Knoppen Container */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button 
+                    onClick={() => generateLegalLetterPdf(data.audit, userDetails)}
+                    style={{
+                      width: '100%',
+                      background: '#0f172a',
+                      color: '#ffffff',
+                      padding: '13px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontSize: '14px',
+                      transition: 'background 0.2s ease'
+                    }}
+                  >
+                    <Download size={18} />
+                    Download Aangetekende Sommatiebrief Hoekstra (PDF)
+                  </button>
+
+                  <button 
+                    onClick={() => generateHuurcommissieDossier(data.audit, userDetails)}
+                    style={{
+                      width: '100%',
+                      background: '#b91c1c',
+                      color: '#ffffff',
+                      padding: '12px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      fontSize: '14px',
+                      transition: 'background 0.2s ease'
+                    }}
+                  >
+                    <Gavel size={18} />
+                    Download Officieel Huurcommissie Verzoekschrift (PDF ex Art. 7:260 BW)
+                  </button>
+                </div>
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Tab 2: Stappen Tracker & Checklist */}
+      {/* Tab 2: Stappen Checklist & Tips */}
       {activeTab === 'checklist' && (
         <InteractiveChecklist auditData={data?.audit || null} />
       )}
 
-      {/* Tab 3: Inspreken voor Advocaat */}
+      {/* Tab 3: Anti-Pingpong Detector & Weerwoord */}
+      {activeTab === 'pingpong' && (
+        <PingpongDetector beheerder={data?.audit?.verhuurderBeheerder || 'Hoekstra Vastgoedbeheer'} />
+      )}
+
+      {/* Tab 4: Radiator K-Waarde Audit */}
+      {activeTab === 'radiator' && (
+        <RadiatorAudit />
+      )}
+
+      {/* Tab 5: Inspreken voor Advocaat */}
       {activeTab === 'voice' && (
         <VoiceLawyerBrief auditData={data?.audit} userDetails={userDetails} />
       )}
